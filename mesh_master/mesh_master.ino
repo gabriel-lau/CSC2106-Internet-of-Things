@@ -1,94 +1,110 @@
-/*
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp-mesh-esp32-esp8266-painlessmesh/
-  
-  This is a simple example that uses the painlessMesh library: https://github.com/gmag11/painlessMesh/blob/master/examples/basic/basic.ino
-*/
-
+//************************************************************
+// this is a simple example that uses the painlessMesh library to 
+// connect to a node on another network. Please see the WIKI on gitlab
+// for more details
+// https://gitlab.com/painlessMesh/painlessMesh/wikis/bridge-between-mesh-and-another-network
+//************************************************************
+#include <Arduino.h>
 #include "painlessMesh.h"
-#include <M5StickCPlus.h>
-#include <WiFi.h>
+#include <PubSubClient.h>
+#include <WiFiClient.h>
 
 #define   MESH_PREFIX     "whateverYouLike"
 #define   MESH_PASSWORD   "somethingSneaky"
 #define   MESH_PORT       5555
 
-const char* ssid       = "opennet_2.4GHz";
-const char* password   = "98314423";
+#define   WIFI_SSID     "opennet_2.4GHz"
+#define   WIFI_PASSWORD ""
 
-Scheduler userScheduler; // to control your personal task
+// prototypes
+void receivedCallback( uint32_t from, String &msg );
+void mqttCallback(char* topic, byte* payload, unsigned int length);
+
+IPAddress getlocalIP();
+
+IPAddress myIP(0,0,0,0);
+
 painlessMesh  mesh;
-
-// User stub
-void sendMessage() ; // Prototype so PlatformIO doesn't complain
-
-Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
-
-void sendMessage() {
-  String msg = "Are you alive";
-  msg += mesh.getNodeId();
-  mesh.sendBroadcast( msg );
-  taskSendMessage.setInterval(TASK_SECOND * 60);
-  Serial.println(msg);
-}
-
-// Needed for painless library
-void receivedCallback( uint32_t from, String &msg ) {
-  Serial.printf("startHere: Received from %u msg=%s\n", from, msg.c_str());
-}
-
-void newConnectionCallback(uint32_t nodeId) {
-    Serial.printf("--> startHere: New Connection, nodeId = %u\n", nodeId);
-    std::list<uint32_t> x = mesh.getNodeList();
-    Serial.printf("startHere: Node list: ");
-    for (int i = 0; i < x.size(); i++) {
-      Serial.printf("%u \n", x.front());
-      x.pop_front();
-    }
-}
-
-void changedConnectionCallback() {
-  Serial.printf("Changed connections\n");
-}
-
-void nodeTimeAdjustedCallback(int32_t offset) {
-    Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset);
-}
+WiFiClient wifiClient;
+PubSubClient mqttClient("test.mosquitto.org", 1883, mqttCallback, wifiClient);
 
 void setup() {
   Serial.begin(115200);
-
-  M5.begin();
-  M5.Lcd.setRotation(3);
-  M5.Lcd.fillScreen(BLACK);
-  M5.Lcd.setCursor(0, 0, 2);
-  M5.Lcd.printf("Mesh_Master_Node", 0);
+  mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
 
 
-//mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
-  mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
+  // Channel set to 4. Make sure to use the same channel for your mesh and for you other network (STATION_SSID)
+  mesh.init( MESH_PREFIX, MESH_PASSWORD, MESH_PORT, WIFI_AP_STA, 4);
+  // Setup over the air update support
+  mesh.initOTAReceive("bridge");
 
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT );
+  mesh.stationManual(WIFI_SSID, WIFI_PASSWORD);
+  // Bridge node, should (in most cases) be a root node. See [the wiki](https://gitlab.com/painlessMesh/painlessMesh/wikis/Possible-challenges-in-mesh-formation) for some background
+  mesh.setRoot(true);
+  // This node and all other nodes should ideally know the mesh contains a root, so call this on all nodes
+  mesh.setContainsRoot(true);
+
+
   mesh.onReceive(&receivedCallback);
-  mesh.onNewConnection(&newConnectionCallback);
-  mesh.onChangedConnections(&changedConnectionCallback);
-  mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
-
-  Serial.printf("Connecting to %s ", ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-  }
-  Serial.println(" CONNECTED");
-
-  //userScheduler.addTask( taskSendMessage );
-  //taskSendMessage.enable();
 }
 
-
 void loop() {
-  // it will run the user scheduler as well
   mesh.update();
+  
+  if(myIP != getlocalIP()){
+    myIP = getlocalIP();
+    Serial.println("My IP is " + myIP.toString());
 
+    if (mqttClient.connect("painlessMeshClient")) {
+      mqttClient.publish("iot_mesh","Ready!");
+      mqttClient.subscribe("iot_mesh");
+    } 
+  }
+}
+
+void receivedCallback( uint32_t from, String &msg ) {
+  Serial.printf("bridge: Received from %u msg=%s\n", from, msg.c_str());
+  mqttClient.publish("iot_mesh", msg.c_str());
+}
+
+void mqttCallback(char* topic, uint8_t* payload, unsigned int length) {
+  char* cleanPayload = (char*)malloc(length+1);
+  memcpy(cleanPayload, payload, length);
+  cleanPayload[length] = '\0';
+  String msg = String(cleanPayload);
+  free(cleanPayload);
+
+  String targetStr = String(topic).substring(16);
+
+  if(targetStr == "gateway")
+  {
+    if(msg == "getNodes")
+    {
+      auto nodes = mesh.getNodeList(true);
+      String str;
+      for (auto &&id : nodes)
+        str += String(id) + String(" ");
+      mqttClient.publish("iot_mesh", str.c_str());
+    }
+  }
+  else if(targetStr == "broadcast") 
+  {
+    mesh.sendBroadcast(msg);
+  }
+  else
+  {
+    uint32_t target = strtoul(targetStr.c_str(), NULL, 10);
+    if(mesh.isConnected(target))
+    {
+      mesh.sendSingle(target, msg);
+    }
+    else
+    {
+      mqttClient.publish("iot_mesh", "Client not connected!");
+    }
+  }
+}
+
+IPAddress getlocalIP() {
+  return IPAddress(mesh.getStationIP());
 }
