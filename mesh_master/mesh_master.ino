@@ -9,11 +9,11 @@
 #include <PubSubClient.h>
 #include <WiFiClient.h>
 
-#define   MESH_PREFIX     "whateverYouLike"
-#define   MESH_PASSWORD   "somethingSneaky"
+#define   MESH_PREFIX     "homeMesh"
+#define   MESH_PASSWORD   "homeMesh"
 #define   MESH_PORT       5555
 
-#define   WIFI_SSID     "opennet_2.4GHz"
+#define   WIFI_SSID     ""
 #define   WIFI_PASSWORD ""
 
 // prototypes
@@ -34,7 +34,7 @@ void setup() {
 
 
   // Channel set to 4. Make sure to use the same channel for your mesh and for you other network (STATION_SSID)
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, MESH_PORT, WIFI_AP_STA, 4);
+  mesh.init( MESH_PREFIX, MESH_PASSWORD, MESH_PORT, WIFI_AP_STA, 6);
   // Setup over the air update support
   mesh.initOTAReceive("bridge");
 

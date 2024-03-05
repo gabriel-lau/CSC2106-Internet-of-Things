@@ -8,8 +8,8 @@
 #include "painlessMesh.h"
 #include <M5StickCPlus.h>
 
-#define   MESH_PREFIX     "whateverYouLike"
-#define   MESH_PASSWORD   "somethingSneaky"
+#define   MESH_PREFIX     "homeMesh"
+#define   MESH_PASSWORD   "homeMesh"
 #define   MESH_PORT       5555
 
 Scheduler userScheduler; // to control your personal task
