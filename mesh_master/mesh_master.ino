@@ -15,6 +15,7 @@
 
 #define   WIFI_SSID     ""
 #define   WIFI_PASSWORD ""
+// Channel set to 6. Make sure to use the same channel for your mesh and for you other network (STATION_SSID)
 #define   WIFI_CHANNEL 6
 
 // prototypes
@@ -34,7 +35,6 @@ void setup() {
   mesh.setDebugMsgTypes( ERROR | STARTUP | CONNECTION );  // set before init() so that you can see startup messages
 
 
-  // Channel set to 4. Make sure to use the same channel for your mesh and for you other network (STATION_SSID)
   mesh.init( MESH_PREFIX, MESH_PASSWORD, MESH_PORT, WIFI_AP_STA, WIFI_CHANNEL);
   // Setup over the air update support
   mesh.initOTAReceive("bridge");
