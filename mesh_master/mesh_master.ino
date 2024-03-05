@@ -13,8 +13,8 @@
 #define   MESH_PASSWORD   "homeMesh"
 #define   MESH_PORT       5555
 
-#define   WIFI_SSID     "RyanLegion"
-#define   WIFI_PASSWORD "thisisthepassword"
+#define   WIFI_SSID     ""
+#define   WIFI_PASSWORD ""
 // Channel set to 6. Make sure to use the same channel for your mesh and for you other network (STATION_SSID)
 #define   WIFI_CHANNEL 6
 
