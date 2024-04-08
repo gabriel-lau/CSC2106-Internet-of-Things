@@ -213,53 +213,52 @@ void loop() {
                 uint16_t command = IrReceiver.decodedIRData.command;
                 Serial.print("Command received: ");
                 Serial.println(command); // prints the command as a hexadecimal value
-                Serial.println("here");
                 switch(command){
-                  case 1:
+                  case 0:
                     Serial.println("Light Off");
                     break;
                   
-                  case 2:
+                  case 1:
                     Serial.println("Light On");
                     break;
                   
-                  case 3:
+                  case 2:
                     Serial.println("Fan Off");
                     break;
                   
-                  case 4:
+                  case 3:
                     Serial.println("Fan low");
                     break;
                   
-                  case 5:
+                  case 4:
                     Serial.println("Fan Med");
                     break;
                   
-                  case 6:
+                  case 5:
                     Serial.println("Fan High");
                     break;
                   
-                  case 7:
+                  case 6:
                     Serial.println("Fan Oscillating");
                     break;
                   
-                  case 8:
+                  case 7:
                     Serial.println("Fan Non-Oscillating");
                     break;
                   
-                  case 9:
+                  case 8:
                     Serial.println("Aircon Off");
                     break;
                   
-                  case 10:
+                  case 9:
                     Serial.println("Aircon On");
                     break;
                   
-                  case 11:
+                  case 10:
                     Serial.println("Aircon Increase Temperature");
                     break;
 
-                  case 12:
+                  case 11:
                     Serial.println("Aircon Decrease Temperature");
                     break;
                   
