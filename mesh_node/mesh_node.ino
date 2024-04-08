@@ -20,7 +20,9 @@
 
 Scheduler userScheduler; // to control your personal task
 painlessMesh  mesh;
-const char* deviceName = "fan";
+const char* deviceName = "light";
+// const char* deviceName = "fan";
+// const char* deviceName = "aircon";
 
 
 // User stub
@@ -71,7 +73,7 @@ void newConnectionCallback(uint32_t nodeId) {
     Serial.printf("--> startHere: New Connection,\nnodeId = %u\n", nodeId);
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setCursor(0, 0);
-    M5.Lcd.printf("Mesh Node \n", 0);
+    M5.Lcd.printf("%s \n", deviceName);
     M5.Lcd.printf("Connected to master Node,\n nodeId = %u\n", nodeId);
 }
 
@@ -122,27 +124,48 @@ void loop() {
 void controlAppliance(const char* appliance_name, int command) {
   if (strcmp(appliance_name, deviceName) == 0) {
     switch(command) {
+      //Light cases
       case 0:
-        IrSender.sendFAST(2, 2);
+        IrSender.sendFAST(0, 2);
         break;
       case 1:
-        IrSender.sendFAST(3, 2);
+        IrSender.sendFAST(1, 2);
         break;
-      case 2:
-        IrSender.sendFAST(4, 2);
-        break;
-      case 3:
-        IrSender.sendFAST(5, 2);
-        break;
-      case 4:
-        IrSender.sendFAST(6, 2);
-        break;
-      case 5:
-        IrSender.sendFAST(7, 2);
-        break;
-      default:
-        // Handle invalid command
-        break;
+      //Fan cases
+      // case 0:
+      //   IrSender.sendFAST(2, 2);
+      //   break;
+      // case 1:
+      //   IrSender.sendFAST(3, 2);
+      //   break;
+      // case 2:
+      //   IrSender.sendFAST(4, 2);
+      //   break;
+      // case 3:
+      //   IrSender.sendFAST(5, 2);
+      //   break;
+      // case 4:
+      //   IrSender.sendFAST(6, 2);
+      //   break;
+      // case 5:
+      //   IrSender.sendFAST(7, 2);
+      //   break;
+      // default:
+      //   break;
+      //Aircon cases
+      // case 0:
+      //   IrSender.sendFAST(8, 2);
+      //   break;
+      // case 1:
+      //   IrSender.sendFAST(9, 2);
+      //   break;
+      // case 2:
+      //   IrSender.sendFAST(10, 2);
+      //   break;
+      // case 3:
+      //   IrSender.sendFAST(11, 2);
+      //   break;
+
     }
   }
 }
